@@ -1,13 +1,10 @@
 # SUI Swap
 
-[中文文档](README_ZH.md) | English
-
 SUI Swap is an Automated Market Maker (AMM) protocol built on the SUI blockchain, utilizing the constant product model (x*y=k) for token swaps. This project implements a complete set of Decentralized Exchange (DEX) core functionalities, enabling users to add liquidity and perform token swaps.
 
 ## Related Documentation
 
 - [Deployment and Usage Guide](OPERATION_GUIDE.md): Detailed deployment steps and sui client call examples
-- [操作指南](OPERATION_GUIDE_ZH.md): Deployment and usage guide (Chinese version)
 
 ## Core Features
 
