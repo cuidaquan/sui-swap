@@ -4,7 +4,7 @@ SUI Swap is an Automated Market Maker (AMM) protocol built on the SUI blockchain
 
 ## Related Documentation
 
-- [Deployment and Usage Guide](sui_swap/OPERATION_GUIDE.md): Detailed deployment steps and sui client call examples
+- [Deployment and Usage Guide](OPERATION_GUIDE.md): Detailed deployment steps and sui client call examples
 
 ## Core Features
 

@@ -247,5 +247,4 @@ A: Test tokens use 9 decimal places by default, consistent with most cryptocurre
 
 1. When performing exchange operations, make sure to set an appropriate `min_amount_out` to prevent losses due to price volatility
 2. Transaction deadline (deadline) should be set to a future timestamp, in seconds
-3. Before operating on the mainnet, it's recommended to thoroughly test on the testnet
-4. Record all important object IDs to avoid losing access 
+3. Before operating on the mainnet, it's recommended to thoroughly test on the testnet 
