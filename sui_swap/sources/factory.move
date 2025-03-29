@@ -10,7 +10,7 @@ module sui_swap::factory {
 
     use sui_swap::liquidity_pool::{Self};
 
-    /// 工厂结构，管理所有流动性池
+    /// Factory structure, manages all liquidity pools
     public struct Factory has key {
         id: UID,
         pools: Table<String, address>,
@@ -19,14 +19,14 @@ module sui_swap::factory {
         owner: address,
     }
 
-    /// 工厂创建事件
+    /// Factory creation event
     public struct FactoryCreatedEvent has copy, drop {
         factory_id: address,
         owner: address,
         default_fee_percent: u64,
     }
 
-    /// 池创建事件
+    /// Pool creation event
     public struct PoolCreatedByFactoryEvent has copy, drop {
         factory_id: address,
         pool_id: address,
@@ -35,19 +35,19 @@ module sui_swap::factory {
         coin_y_type: String,
     }
 
-    /// 错误码
+    /// Error codes
     const E_NOT_OWNER: u64 = 0;
     const E_POOL_ALREADY_EXISTS: u64 = 1;
     const E_POOL_DOES_NOT_EXIST: u64 = 2;
     const E_INVALID_FEE_PERCENT: u64 = 3;
     const E_SAME_COIN_TYPE: u64 = 4;
 
-    /// 创建工厂
+    /// Create factory
     public fun create_factory(
         default_fee_percent: u64,
         ctx: &mut TxContext
     ) {
-        // 验证费率在合理范围内 (0-5%)
+        // Validate fee rate is within reasonable range (0-5%)
         assert!(default_fee_percent <= 500, E_INVALID_FEE_PERCENT);
         
         let factory_id = object::new(ctx);
@@ -62,18 +62,18 @@ module sui_swap::factory {
             owner,
         };
         
-        // 发出工厂创建事件
+        // Emit factory creation event
         event::emit(FactoryCreatedEvent {
             factory_id: factory_address,
             owner,
             default_fee_percent,
         });
         
-        // 共享工厂对象
+        // Share factory object
         transfer::share_object(factory);
     }
 
-    /// 创建流动性池
+    /// Create liquidity pool
     public fun create_pool<CoinTypeX, CoinTypeY>(
         factory: &mut Factory,
         coin_x: Coin<CoinTypeX>,
@@ -81,30 +81,30 @@ module sui_swap::factory {
         fee_percent: u64,
         ctx: &mut TxContext
     ) {
-        // 只有所有者可以创建池子
+        // Only owner can create pools
         assert!(tx_context::sender(ctx) == factory.owner, E_NOT_OWNER);
         
-        // 确保代币类型不同
+        // Ensure token types are different
         assert!(!is_same_type<CoinTypeX, CoinTypeY>(), E_SAME_COIN_TYPE);
         
-        // 验证费率在合理范围内 (0-5%)
+        // Validate fee rate is within reasonable range (0-5%)
         assert!(fee_percent <= 500, E_INVALID_FEE_PERCENT);
         
-        // 生成池键
+        // Generate pool key
         let pool_key = get_pool_key<CoinTypeX, CoinTypeY>();
         
-        // 确保池不存在
+        // Ensure pool doesn't exist
         assert!(!table::contains(&factory.pools, pool_key), E_POOL_ALREADY_EXISTS);
         
-        // 创建流动性池
+        // Create liquidity pool
         let pool = liquidity_pool::create_pool(coin_x, coin_y, fee_percent, ctx);
         let pool_id = object::uid_to_address(liquidity_pool::get_pool_id(&pool));
         
-        // 将池添加到工厂
+        // Add pool to factory
         table::add(&mut factory.pools, pool_key, pool_id);
         vector::push_back(&mut factory.pool_list, pool_key);
         
-        // 发出池创建事件
+        // Emit pool creation event
         event::emit(PoolCreatedByFactoryEvent {
             factory_id: object::uid_to_address(&factory.id),
             pool_id,
@@ -113,11 +113,11 @@ module sui_swap::factory {
             coin_y_type: get_coin_name<CoinTypeY>(),
         });
         
-        // 共享池对象
+        // Share pool object
         transfer::public_share_object(pool);
     }
 
-    /// 使用默认费率创建流动性池
+    /// Create liquidity pool with default fee
     public fun create_pool_with_default_fee<CoinTypeX, CoinTypeY>(
         factory: &mut Factory,
         coin_x: Coin<CoinTypeX>,
@@ -134,34 +134,34 @@ module sui_swap::factory {
         )
     }
 
-    /// 更新默认费率
+    /// Update default fee rate
     public fun update_default_fee_percent(
         factory: &mut Factory,
         new_fee_percent: u64,
         ctx: &mut TxContext
     ) {
-        // 只有所有者可以更新费率
+        // Only owner can update fee rate
         assert!(tx_context::sender(ctx) == factory.owner, E_NOT_OWNER);
         
-        // 验证费率在合理范围内 (0-5%)
+        // Validate fee rate is within reasonable range (0-5%)
         assert!(new_fee_percent <= 500, E_INVALID_FEE_PERCENT);
         
         factory.default_fee_percent = new_fee_percent;
     }
 
-    /// 转移工厂所有权
+    /// Transfer factory ownership
     public fun transfer_ownership(
         factory: &mut Factory,
         new_owner: address,
         ctx: &mut TxContext
     ) {
-        // 只有所有者可以转移所有权
+        // Only owner can transfer ownership
         assert!(tx_context::sender(ctx) == factory.owner, E_NOT_OWNER);
         
         factory.owner = new_owner;
     }
 
-    /// 获取池地址
+    /// Get pool address
     public fun get_pool_address<CoinTypeX, CoinTypeY>(
         factory: &Factory
     ): address {
@@ -170,40 +170,40 @@ module sui_swap::factory {
         *table::borrow(&factory.pools, pool_key)
     }
 
-    /// 获取所有池键
+    /// Get all pool keys
     public fun get_all_pool_keys(
         factory: &Factory
     ): &vector<String> {
         &factory.pool_list
     }
 
-    /// 获取池数量
+    /// Get pool count
     public fun get_pool_count(
         factory: &Factory
     ): u64 {
         vector::length(&factory.pool_list)
     }
 
-    /// 获取默认费率
+    /// Get default fee rate
     public fun get_default_fee_percent(
         factory: &Factory
     ): u64 {
         factory.default_fee_percent
     }
 
-    /// 获取工厂所有者
+    /// Get factory owner
     public fun get_owner(
         factory: &Factory
     ): address {
         factory.owner
     }
 
-    /// 生成池键（辅助函数）
+    /// Generate pool key (helper function)
     fun get_pool_key<CoinTypeX, CoinTypeY>(): String {
         let type_x = get_coin_name<CoinTypeX>();
         let type_y = get_coin_name<CoinTypeY>();
         
-        // 确保类型按字典序排序，以确保相同的代币对总是生成相同的键
+        // Ensure types are sorted lexicographically to ensure the same token pair always generates the same key
         if (string_compare(&type_x, &type_y) <= 0) {
             let mut key = string::utf8(b"");
             string::append(&mut key, type_x);
@@ -219,7 +219,7 @@ module sui_swap::factory {
         }
     }
 
-    /// 字符串比较（辅助函数）
+    /// String comparison (helper function)
     fun string_compare(a: &String, b: &String): u8 {
         let a_bytes = string::as_bytes(a);
         let b_bytes = string::as_bytes(b);
@@ -252,12 +252,12 @@ module sui_swap::factory {
         }
     }
 
-    /// 检查两个类型是否相同（辅助函数）
+    /// Check if two types are the same (helper function)
     fun is_same_type<T1, T2>(): bool {
         get_coin_name<T1>() == get_coin_name<T2>()
     }
 
-    /// 获取代币名称（辅助函数）
+    /// Get coin name (helper function)
     fun get_coin_name<CoinType>(): String {
         let type_name = std::type_name::get<CoinType>();
         string::utf8(std::ascii::into_bytes(std::type_name::into_string(type_name)))

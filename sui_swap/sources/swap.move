@@ -7,7 +7,7 @@ module sui_swap::swap {
     use sui_swap::liquidity_pool::{Self, LiquidityPool};
     use std::string::{Self, String};
 
-    /// 兑换事件
+    /// Swap event
     public struct SwapEvent has copy, drop {
         sender: address,
         pool_id: address,
@@ -17,13 +17,13 @@ module sui_swap::swap {
         amount_out: u64,
     }
 
-    /// 错误码
+    /// Error codes
     const E_ZERO_AMOUNT: u64 = 0;
     const E_INSUFFICIENT_OUTPUT_AMOUNT: u64 = 1;
     const E_INSUFFICIENT_LIQUIDITY: u64 = 2;
     const E_INVALID_DEADLINE: u64 = 3;
 
-    /// X->Y代币兑换
+    /// Swap token X to Y
     public fun swap_x_to_y<CoinTypeX, CoinTypeY>(
         pool: &mut LiquidityPool<CoinTypeX, CoinTypeY>,
         coin_x: Coin<CoinTypeX>,
@@ -31,18 +31,18 @@ module sui_swap::swap {
         deadline: u64,
         ctx: &mut TxContext
     ): Coin<CoinTypeY> {
-        // 检查截止时间
+        // Check deadline
         assert!(tx_context::epoch(ctx) <= deadline, E_INVALID_DEADLINE);
         
-        // 获取输入代币数量
+        // Get input token amount
         let amount_in = coin::value(&coin_x);
         assert!(amount_in > 0, E_ZERO_AMOUNT);
         
-        // 获取池中的储备量
+        // Get reserves from the pool
         let (reserve_x, reserve_y) = liquidity_pool::get_reserves(pool);
         assert!(reserve_x > 0 && reserve_y > 0, E_INSUFFICIENT_LIQUIDITY);
         
-        // 计算输出数量（考虑手续费），使用u128避免溢出
+        // Calculate output amount (considering fees), using u128 to avoid overflow
         let fee_percent = liquidity_pool::get_fee_percent(pool);
         
         let amount_in_u128 = (amount_in as u128);
@@ -61,13 +61,13 @@ module sui_swap::swap {
             (amount_out_u128 as u64)
         };
         
-        // 检查输出数量是否满足最低要求
+        // Check if output amount meets minimum requirement
         assert!(amount_out >= min_amount_out, E_INSUFFICIENT_OUTPUT_AMOUNT);
         
-        // 执行兑换
+        // Execute swap
         let coin_y = liquidity_pool::swap_x_to_y(pool, coin_x, amount_out, ctx);
         
-        // 发出兑换事件
+        // Emit swap event
         event::emit(SwapEvent {
             sender: tx_context::sender(ctx),
             pool_id: object::uid_to_address(liquidity_pool::get_pool_id(pool)),
@@ -80,7 +80,7 @@ module sui_swap::swap {
         coin_y
     }
 
-    /// Y->X代币兑换
+    /// Swap token Y to X
     public fun swap_y_to_x<CoinTypeX, CoinTypeY>(
         pool: &mut LiquidityPool<CoinTypeX, CoinTypeY>,
         coin_y: Coin<CoinTypeY>,
@@ -88,18 +88,18 @@ module sui_swap::swap {
         deadline: u64,
         ctx: &mut TxContext
     ): Coin<CoinTypeX> {
-        // 检查截止时间
+        // Check deadline
         assert!(tx_context::epoch(ctx) <= deadline, E_INVALID_DEADLINE);
         
-        // 获取输入代币数量
+        // Get input token amount
         let amount_in = coin::value(&coin_y);
         assert!(amount_in > 0, E_ZERO_AMOUNT);
         
-        // 获取池中的储备量
+        // Get reserves from the pool
         let (reserve_x, reserve_y) = liquidity_pool::get_reserves(pool);
         assert!(reserve_x > 0 && reserve_y > 0, E_INSUFFICIENT_LIQUIDITY);
         
-        // 计算输出数量（考虑手续费），使用u128避免溢出
+        // Calculate output amount (considering fees), using u128 to avoid overflow
         let fee_percent = liquidity_pool::get_fee_percent(pool);
         
         let amount_in_u128 = (amount_in as u128);
@@ -118,13 +118,13 @@ module sui_swap::swap {
             (amount_out_u128 as u64)
         };
         
-        // 检查输出数量是否满足最低要求
+        // Check if output amount meets minimum requirement
         assert!(amount_out >= min_amount_out, E_INSUFFICIENT_OUTPUT_AMOUNT);
         
-        // 执行兑换
+        // Execute swap
         let coin_x = liquidity_pool::swap_y_to_x(pool, coin_y, amount_out, ctx);
         
-        // 发出兑换事件
+        // Emit swap event
         event::emit(SwapEvent {
             sender: tx_context::sender(ctx),
             pool_id: object::uid_to_address(liquidity_pool::get_pool_id(pool)),
@@ -137,7 +137,7 @@ module sui_swap::swap {
         coin_x
     }
 
-    /// 获取代币名称（辅助函数）
+    /// Get coin name (helper function)
     fun get_coin_name<CoinType>(): String {
         let type_name = std::type_name::get<CoinType>();
         string::utf8(std::ascii::into_bytes(std::type_name::into_string(type_name)))

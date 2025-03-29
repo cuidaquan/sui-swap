@@ -15,19 +15,19 @@ module sui_swap::sui_swap {
     use sui_swap::liquidity_pool::{Self, LiquidityPool, LPCoin};
     use sui_swap::swap;
 
-    /// 默认手续费率（0.3%）
+    /// Default fee rate (0.3%)
     const DEFAULT_FEE_PERCENT: u64 = 30;
 
-    /// 一次性见证类型，用于初始化
+    /// One-time witness type for initialization
     public struct SUI_SWAP has drop {}
 
-    /// 初始化函数
+    /// Initialization function
     fun init(_witness: SUI_SWAP, ctx: &mut TxContext) {
-        // 创建工厂
+        // Create factory
         factory::create_factory(DEFAULT_FEE_PERCENT, ctx);
     }
 
-    /// 创建流动性池
+    /// Create liquidity pool
     public entry fun create_pool<CoinTypeX, CoinTypeY>(
         factory: &mut Factory,
         coin_x: Coin<CoinTypeX>,
@@ -38,7 +38,7 @@ module sui_swap::sui_swap {
         factory::create_pool(factory, coin_x, coin_y, fee_percent, ctx);
     }
 
-    /// 使用默认费率创建流动性池
+    /// Create liquidity pool with default fee rate
     public entry fun create_pool_with_default_fee<CoinTypeX, CoinTypeY>(
         factory: &mut Factory,
         coin_x: Coin<CoinTypeX>,
@@ -48,7 +48,7 @@ module sui_swap::sui_swap {
         factory::create_pool_with_default_fee(factory, coin_x, coin_y, ctx);
     }
 
-    /// 添加流动性
+    /// Add liquidity
     public entry fun add_liquidity<CoinTypeX, CoinTypeY>(
         pool: &mut LiquidityPool<CoinTypeX, CoinTypeY>,
         coin_x: Coin<CoinTypeX>,
@@ -58,13 +58,13 @@ module sui_swap::sui_swap {
         let sender = tx_context::sender(ctx);
         let (lp_coin, remaining_x, remaining_y) = liquidity_pool::add_liquidity(pool, coin_x, coin_y, ctx);
         
-        // 转移LP代币和剩余代币给用户
+        // Transfer LP tokens and remaining coins to user
         transfer::public_transfer(lp_coin, sender);
         transfer::public_transfer(remaining_x, sender);
         transfer::public_transfer(remaining_y, sender);
     }
 
-    /// 移除流动性
+    /// Remove liquidity
     public entry fun remove_liquidity<CoinTypeX, CoinTypeY>(
         pool: &mut LiquidityPool<CoinTypeX, CoinTypeY>,
         lp_coin: LPCoin<CoinTypeX, CoinTypeY>,
@@ -75,7 +75,7 @@ module sui_swap::sui_swap {
         transfer::public_transfer(coin_y, tx_context::sender(ctx));
     }
 
-    /// X->Y代币兑换
+    /// Swap X to Y token
     public entry fun swap_x_to_y<CoinTypeX, CoinTypeY>(
         pool: &mut LiquidityPool<CoinTypeX, CoinTypeY>,
         coin_x: Coin<CoinTypeX>,
@@ -87,7 +87,7 @@ module sui_swap::sui_swap {
         transfer::public_transfer(coin_y, tx_context::sender(ctx));
     }
 
-    /// Y->X代币兑换
+    /// Swap Y to X token
     public entry fun swap_y_to_x<CoinTypeX, CoinTypeY>(
         pool: &mut LiquidityPool<CoinTypeX, CoinTypeY>,
         coin_y: Coin<CoinTypeY>,
@@ -99,7 +99,7 @@ module sui_swap::sui_swap {
         transfer::public_transfer(coin_x, tx_context::sender(ctx));
     }
 
-    /// 更新工厂默认费率
+    /// Update factory default fee rate
     public entry fun update_default_fee_percent(
         factory: &mut Factory,
         new_fee_percent: u64,
@@ -108,7 +108,7 @@ module sui_swap::sui_swap {
         factory::update_default_fee_percent(factory, new_fee_percent, ctx);
     }
 
-    /// 转移工厂所有权
+    /// Transfer factory ownership
     public entry fun transfer_factory_ownership(
         factory: &mut Factory,
         new_owner: address,

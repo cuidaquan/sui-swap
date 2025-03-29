@@ -7,25 +7,25 @@ module sui_swap::test_coin_x {
     /// OTW (One-Time Witness)
     public struct TEST_COIN_X has drop {}
 
-    /// 模块初始化函数 - 创建测试代币X
+    /// Module initialization function - Creates test token X
     fun init(witness: TEST_COIN_X, ctx: &mut TxContext) {
-        // 创建测试代币X
+        // Create test token X
         let (treasury_cap, metadata) = coin::create_currency(
             witness, 
-            9, // 小数位数
-            b"TCOINX", // 符号
-            b"Test Coin X", // 名称
-            b"Test coin X for SUI Swap testing", // 描述
-            option::none(), // 图标URL
+            9, // Decimals
+            b"TCOINX", // Symbol
+            b"Test Coin X", // Name
+            b"Test coin X for SUI Swap testing", // Description
+            option::none(), // Icon URL
             ctx
         );
 
-        // 将元数据冻结，铸币能力共享
+        // Freeze metadata and share treasury cap
         transfer::public_freeze_object(metadata);
         transfer::public_share_object(treasury_cap);
     }
 
-    /// 铸造代币的公共函数
+    /// Public function for minting tokens
     public entry fun mint(
         treasury_cap: &mut TreasuryCap<TEST_COIN_X>, 
         amount: u64,
